@@ -10,11 +10,12 @@ const typeDefs = gql`
 
     type Channel {
         name: String!
-        posts: [Post!]
+        posts: [Post!]!
     }
 
     type Query {
         posts: [Post!]!
+        channels: [Channel!]!
     }
 
     type Mutation {
@@ -29,11 +30,20 @@ const typeDefs = gql`
 const data = [
 	{ message: 'hello world', date: new Date() }
 ]
+const channelData = [
+    {
+        name: "channel1",
+        posts: [data[0]]
+    }
+]
 
 const resolvers = {
 	Query: {
         posts: () => {
 			return data
+		},
+        channels: () => {
+			return channelData
 		}
 	},
 	Mutation: {
