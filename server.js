@@ -8,6 +8,11 @@ const typeDefs = gql`
         date: String!
     }
 
+    type Channel {
+        name: String!
+        posts: [Post!]
+    }
+
     type Query {
         posts: [Post!]!
     }
