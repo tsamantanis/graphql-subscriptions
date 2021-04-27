@@ -1,4 +1,4 @@
-const { ApolloServer, gql, PubSub } = require('apollo-server');
+const { ApolloServer, gql, PubSub, withFilter } = require('apollo-server');
 
 const pubsub = new PubSub();
 
@@ -14,17 +14,17 @@ const typeDefs = gql`
     }
 
     type Query {
-        posts(channel: String!): [Post!]!
+        posts(channel: String!): [Post!]
         channels: [Channel!]!
     }
 
     type Mutation {
-        addPost(message: String!): Post!
+        addPost(channel: String!, message: String!): Post!
         addChannel(name: String!): Channel!
     }
 
     type Subscription {
-        newPost: Post!
+        newPost(channel: String!): Post
         newChannel: Channel!
     }
 `
@@ -41,18 +41,22 @@ const channelData = [
 
 const resolvers = {
 	Query: {
-        posts: ({ channel }) => {
-			return channelData.filter(item => item.name === channel)[0]
+        posts: (_, { channel }) => {
+            const posts = channelData.filter(item => item.name === channel)[0].posts
+			return  posts ? posts : []
 		},
         channels: () => {
 			return channelData
 		}
 	},
 	Mutation: {
-        addPost: (_, { message }) => {
+        addPost: (_, { channel, message }) => {
 			const post = { message, date: new Date() }
 			data.push(post)
-			pubsub.publish('NEW_POST', { newPost: post })
+            const updatedChannel = channelData.filter(item => item.name === channel)[0]
+            if (updatedChannel)
+                updatedChannel.posts.push(post)
+			pubsub.publish('NEW_POST', { newPost: post, channel })
 			return post
 		},
         addChannel: (_, { name }) => {
@@ -64,7 +68,12 @@ const resolvers = {
 	},
 	Subscription: {
 		newPost: {
-			subscribe: () => pubsub.asyncIterator('NEW_POST')
+			subscribe: withFilter (
+                () => pubsub.asyncIterator('NEW_POST'),
+                (payload, variables) => {
+                    return payload.channel === variables.channel
+                },
+            )
 		},
         newChannel: {
 			subscribe: () => pubsub.asyncIterator('NEW_CHANNEL')
