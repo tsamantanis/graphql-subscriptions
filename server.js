@@ -14,7 +14,7 @@ const typeDefs = gql`
     }
 
     type Query {
-        posts: [Post!]!
+        posts(channel: String!): [Post!]!
         channels: [Channel!]!
     }
 
@@ -41,8 +41,8 @@ const channelData = [
 
 const resolvers = {
 	Query: {
-        posts: () => {
-			return data
+        posts: ({ channel }) => {
+			return channelData.filter(item => item.name === channel)[0]
 		},
         channels: () => {
 			return channelData
