@@ -25,6 +25,7 @@ const typeDefs = gql`
 
     type Subscription {
         newPost: Post!
+        newChannel: Channel!
     }
 `
 
@@ -64,6 +65,9 @@ const resolvers = {
 	Subscription: {
 		newPost: {
 			subscribe: () => pubsub.asyncIterator('NEW_POST')
+		},
+        newChannel: {
+			subscribe: () => pubsub.asyncIterator('NEW_CHANNEL')
 		}
 	}
 }
